@@ -31,7 +31,7 @@ def callback_function(message):
 @router.get("/subscribe_to_channel")
 async def subscribe_to_channel(background_tasks: BackgroundTasks, channel: str):
     try:
-        background_tasks.add_task(RedisTools.subscribe_to_chanel, channel, callback_function)
+        background_tasks.add_task(RedisTools.subscribe_to_channel, channel, callback_function)
 
         return JSONResponse(content={"message": f"Подписались на {channel}"})
     except Exception as e:

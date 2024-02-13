@@ -55,7 +55,7 @@ class RedisTools:
 
     @classmethod
     @async_redis_connection
-    async def subscribe_to_chanel(cls, con: aioredis.Redis, channel: str, callback: Callable[..., Awaitable]):
+    async def subscribe_to_channel(cls, con: aioredis.Redis, channel: str, callback: Callable[..., Awaitable]):
         pubsub = con.pubsub()
         await pubsub.subscribe(channel)
         async for message in pubsub.listen():
