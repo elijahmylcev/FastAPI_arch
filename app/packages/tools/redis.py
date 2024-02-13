@@ -1,18 +1,6 @@
 import aioredis
-from typing import Callable, TypeVar, Awaitable
-import functools
-
-T = TypeVar('T')
-
-
-def async_redis_connection(method: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
-    @functools.wraps(method)
-    async def wrapper(cls, *args, **kwargs):
-        redis_pool = await cls.get_redis_pool()
-        async with redis_pool as con:
-            return await method(cls, con, *args, **kwargs)
-
-    return wrapper
+from typing import Callable, Awaitable
+from app.helpers.async_redis_decorator import async_redis_connection
 
 
 class RedisTools:
@@ -27,16 +15,48 @@ class RedisTools:
 
     @classmethod
     @async_redis_connection
-    async def set_key(cls, con: aioredis.Redis, pair: str, value: str | int):
-        print(con)
-        await con.set(pair, value)
+    async def set_key(cls, con: aioredis.Redis, key: str, value: str | int):
+        await con.set(key, value)
 
     @classmethod
     @async_redis_connection
-    async def get_key(cls, con: aioredis.Redis, pair: str):
-        return await con.get(pair)
+    async def get_key(cls, con: aioredis.Redis, key: str):
+        return await con.get(key)
 
     @classmethod
     @async_redis_connection
     async def get_keys_pattern(cls, con: aioredis.Redis, pattern: str = '*'):
         return await con.keys(pattern=pattern)
+
+    @classmethod
+    @async_redis_connection
+    async def delete_key(cls, con: aioredis.Redis, key: str):
+        return await con.delete(key)
+
+    @classmethod
+    @async_redis_connection
+    async def increment_key(cls, con: aioredis.Redis, key: str, amount: int = 1):
+        return await con.incrby(key, amount)
+
+    @classmethod
+    @async_redis_connection
+    async def expire_key(cls, con: aioredis.Redis, key: str, time: int = 60 * 60):
+        return await con.expire(key, time)
+
+    @classmethod
+    @async_redis_connection
+    async def add_to_list(cls, con: aioredis.Redis, list_key: str, value: str | list):
+        return await con.rpush(list_key, value)
+
+    @classmethod
+    @async_redis_connection
+    async def get_elements_from_list(cls, con: aioredis.Redis, list_key: str, start: int = 0, end: int = -1):
+        return await con.lrange(list_key, start, end)
+
+    @classmethod
+    @async_redis_connection
+    async def subscribe_to_chanel(cls, con: aioredis.Redis, channel: str, callback: Callable[..., Awaitable]):
+        pubsub = con.pubsub()
+        await pubsub.subscribe(channel)
+        async for message in pubsub.listen():
+            callback(message)
