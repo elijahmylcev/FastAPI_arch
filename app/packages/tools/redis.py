@@ -1,10 +1,11 @@
 import aioredis
 from typing import Callable, Awaitable
 from app.helpers.async_redis_decorator import async_redis_connection
+from app.configuration.settings import REDIS_HOST
 
 
 class RedisTools:
-    __redis_connect = 'redis://localhost:6379'
+    __redis_connect = REDIS_HOST
     __redis_pool = None
 
     @classmethod

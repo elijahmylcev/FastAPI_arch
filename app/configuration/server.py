@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from app.configuration.routes import __routes__
+from fastapi_utils.tasks import repeat_every
+from app.internal.events.startup import on_startup, on_loop_startup
 
 
 class Server:
@@ -15,7 +17,8 @@ class Server:
 
     @staticmethod
     def __register_events(app: FastAPI):
-        ...
+        app.on_event('startup')(repeat_every(seconds=60 * 60 * 12)(on_startup))
+        app.on_event('startup')(repeat_every(seconds=5)(on_loop_startup))
 
     @staticmethod
     def __register_routes(app: FastAPI):

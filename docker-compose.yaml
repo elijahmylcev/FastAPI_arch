@@ -1,8 +1,41 @@
 version: '3'
 
 services:
+
   redis:
     container_name: 'redis'
-    image: 'redis:latest'
+    build:
+      context: .
+      dockerfile: docker/redis/Dockerfile
+
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
     ports:
-      - '6379:6379'
+      - 6379:6379
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+
+    restart: always
+
+    env_file:
+      - .env
+
+    environment:
+      - API_REDIS_HOST=arch-redis
+
+    ports:
+      - 8000:8000
+
+    command: [
+      'uvicorn', 'app:create_app',
+      '--host', '0.0.0.0',
+      '--port', '8000'
+    ]
+
+    depends_on:
+      - redis
